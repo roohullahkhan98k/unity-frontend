@@ -2,6 +2,21 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
+interface Bidder {
+  _id: string;
+  username: string;
+  profileImage?: string;
+}
+
+interface Bid {
+  _id: string;
+  amount: number;
+  bidder: Bidder;
+  postId: string;
+  createdAt: string;
+  isWinning?: boolean;
+}
+
 export const placeBid = createAsyncThunk(
   'bids/placeBid',
   async ({ postId, amount, token }: { postId: string; amount: number; token: string | null }, { rejectWithValue }) => {
@@ -20,8 +35,8 @@ export const placeBid = createAsyncThunk(
         throw new Error(errorData.message || 'Failed to place bid');
       }
       return await res.json();
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : 'An error occurred');
     }
   }
 );
@@ -38,8 +53,8 @@ export const getBidsForPost = createAsyncThunk(
         throw new Error(errorData.message || 'Failed to fetch bids');
       }
       return await res.json();
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : 'An error occurred');
     }
   }
 );
@@ -56,8 +71,8 @@ export const getWinningBid = createAsyncThunk(
         throw new Error(errorData.message || 'Failed to fetch winning bid');
       }
       return await res.json();
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : 'An error occurred');
     }
   }
 );
@@ -77,8 +92,8 @@ export const getUserBids = createAsyncThunk(
         throw new Error(errorData.message || 'Failed to fetch user bids');
       }
       return await res.json();
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : 'An error occurred');
     }
   }
 );
@@ -101,8 +116,8 @@ export const sellToBidder = createAsyncThunk(
         throw new Error(errorData.message || 'Failed to sell to bidder');
       }
       return await res.json();
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : 'An error occurred');
     }
   }
 );
@@ -124,8 +139,8 @@ export const sellToHighestBidder = createAsyncThunk(
         throw new Error(errorData.message || 'Failed to sell to highest bidder');
       }
       return await res.json();
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : 'An error occurred');
     }
   }
 );
@@ -142,8 +157,8 @@ export const getBiddersForPost = createAsyncThunk(
         throw new Error(errorData.message || 'Failed to fetch bidders');
       }
       return await res.json();
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : 'An error occurred');
     }
   }
 );
@@ -151,10 +166,10 @@ export const getBiddersForPost = createAsyncThunk(
 const bidsSlice = createSlice({
   name: 'bids',
   initialState: {
-    bids: [] as any[],
-    winningBid: null as any,
-    userBids: [] as any[],
-    bidders: [] as any[],
+    bids: [] as Bid[],
+    winningBid: null as Bid | null,
+    userBids: [] as Bid[],
+    bidders: [] as Bidder[],
     loading: false,
     error: null as string | null,
   },
@@ -220,7 +235,7 @@ const bidsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(sellToBidder.fulfilled, (state, action) => {
+      .addCase(sellToBidder.fulfilled, (state) => {
         state.loading = false;
         // Clear bids after successful sale
         state.bids = [];
@@ -236,7 +251,7 @@ const bidsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(sellToHighestBidder.fulfilled, (state, action) => {
+      .addCase(sellToHighestBidder.fulfilled, (state) => {
         state.loading = false;
         // Clear bids after successful sale
         state.bids = [];

@@ -2,14 +2,14 @@
 import { usePathname } from 'next/navigation';
 import { UserCircle, Bell } from 'lucide-react';
 import NotificationDropdown from './NotificationDropdown';
-import { useSelector, useDispatch } from 'react-redux';
-import type { RootState, AppDispatch } from '../../store/store';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../store/store';
 import { SidebarDrawer } from './Sidebar';
 import { useEffect, useState } from "react";
 import useAuthToken from "../hooks/useAuthToken";
-import { fetchNotifications, fetchUnreadCount } from "../../store/notificationsSlice";
 import { useNotificationSync } from "../hooks/useNotificationSync";
 import WalletConnectionStatus from './WalletConnectionStatus';
+import Image from 'next/image';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -22,7 +22,7 @@ type Profile = {
 };
 
 function getImageSrc(profileImage: string | null | undefined) {
-  if (!profileImage) return null;
+  if (!profileImage) return '/placeholder-avatar.png';
   if (profileImage.startsWith("http")) return profileImage;
   return `${BASE_URL}${profileImage}`;
 }
@@ -33,7 +33,6 @@ export default function Header() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const token = useAuthToken();
-  const dispatch = useDispatch<AppDispatch>();
   const unreadCount = useSelector((s: RootState) => s.notifications.unreadCount);
   const [dropdownOpen,setDropdownOpen]=useState(false);
   const [previousUnreadCount, setPreviousUnreadCount] = useState(0);
@@ -53,7 +52,7 @@ export default function Header() {
         if (!res.ok) throw new Error("Failed to fetch profile");
         const data = await res.json();
         setProfile(data);
-      } catch (err) {
+      } catch {
         setProfile(null);
       } finally {
         setLoading(false);
@@ -69,7 +68,7 @@ export default function Header() {
       refreshNotifications();
     }
     setPreviousUnreadCount(unreadCount);
-  }, [unreadCount, previousUnreadCount, refreshNotifications]);
+  }, [unreadCount, previousUnreadCount, refreshNotifications, token]);
 
   if (isAuthPage) {
     return null;
@@ -83,9 +82,11 @@ export default function Header() {
           <SidebarDrawer />
         </div>
         <div className="flex items-center">
-          <img 
+          <Image 
             src="/logo.png" 
             alt="Unity Logo" 
+            width={120}
+            height={40}
             className="h-30 w-auto object-contain"
           />
         </div>
@@ -129,9 +130,11 @@ export default function Header() {
               </svg>
             </span>
           ) : profile && profile.profileImage ? (
-            <img
-              src={getImageSrc(profile.profileImage) ?? undefined}
+            <Image
+              src={getImageSrc(profile.profileImage)}
               alt="Profile"
+              width={44}
+              height={44}
               className="h-11 w-11 rounded-full object-cover border-2 border-gray-200 shadow-sm"
             />
           ) : (

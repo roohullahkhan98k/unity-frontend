@@ -1,25 +1,25 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Send, Users, MessageCircle, AlertCircle, Wifi, WifiOff } from 'lucide-react';
+import { Send, Users, MessageCircle, AlertCircle } from 'lucide-react';
 import { useSocket } from '../hooks/useSocket';
 import { useToast } from '../hooks/useToast';
 import useAuthToken from '../hooks/useAuthToken';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import ChatConnectionStatus from './ChatConnectionStatus';
 import type { RootState } from '../../store/store';
+import Image from 'next/image';
 
 interface AuctionChatProps {
   postId: string;
   postTitle: string;
 }
 
-export default function AuctionChat({ postId, postTitle }: AuctionChatProps) {
+export default function AuctionChat({ postId }: AuctionChatProps) {
   const [message, setMessage] = useState('');
   const [showParticipants, setShowParticipants] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(true);
-  const [chatDisabled, setChatDisabled] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   
@@ -115,7 +115,7 @@ export default function AuctionChat({ postId, postTitle }: AuctionChatProps) {
         minute: '2-digit',
         hour12: true,
       });
-    } catch (error) {
+    } catch {
       return 'Invalid time';
     }
   };
@@ -206,14 +206,12 @@ export default function AuctionChat({ postId, postTitle }: AuctionChatProps) {
                         {!isCurrentUser && (
                           <div className="flex-shrink-0">
                             {msg.profileImage ? (
-                              <img
+                              <Image
                                 src={msg.profileImage.startsWith('http') ? msg.profileImage : `${process.env.NEXT_PUBLIC_API_URL}${msg.profileImage}`}
                                 alt={msg.username || 'User avatar'}
+                                width={32}
+                                height={32}
                                 className="w-8 h-8 rounded-full"
-                                onError={(e) => {
-                                  console.log('Image failed to load:', msg.profileImage);
-                                  e.currentTarget.style.display = 'none';
-                                }}
                               />
                             ) : (
                               <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
@@ -251,14 +249,12 @@ export default function AuctionChat({ postId, postTitle }: AuctionChatProps) {
                         {isCurrentUser && (
                           <div className="flex-shrink-0">
                             {msg.profileImage ? (
-                              <img
+                              <Image
                                 src={msg.profileImage.startsWith('http') ? msg.profileImage : `${process.env.NEXT_PUBLIC_API_URL}${msg.profileImage}`}
                                 alt={msg.username || 'User avatar'}
+                                width={32}
+                                height={32}
                                 className="w-8 h-8 rounded-full"
-                                onError={(e) => {
-                                  console.log('Image failed to load:', msg.profileImage);
-                                  e.currentTarget.style.display = 'none';
-                                }}
                               />
                             ) : (
                               <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
@@ -350,14 +346,12 @@ export default function AuctionChat({ postId, postTitle }: AuctionChatProps) {
                   return (
                     <div key={participant.userId} className={`flex items-center gap-2 ${isCurrentUser && isTyping ? 'bg-blue-50 rounded-lg p-2' : ''}`}>
                     {participant.profileImage ? (
-                      <img
+                      <Image
                         src={participant.profileImage.startsWith('http') ? participant.profileImage : `${process.env.NEXT_PUBLIC_API_URL}${participant.profileImage}`}
                         alt={participant.username || 'User avatar'}
+                        width={24}
+                        height={24}
                         className="w-6 h-6 rounded-full"
-                        onError={(e) => {
-                          console.log('Participant image failed to load:', participant.profileImage);
-                          e.currentTarget.style.display = 'none';
-                        }}
                       />
                     ) : (
                       <div className="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">

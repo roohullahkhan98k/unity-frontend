@@ -1,12 +1,12 @@
 "use client";
 import { useState, useRef } from "react";
-import { PlusCircle } from "lucide-react";
 import Modal from "./Modal";
 import { useToast } from "../hooks/useToast";
 import useAuthToken from "../hooks/useAuthToken";
 import { useDispatch } from 'react-redux';
 import { createPost, fetchAllPosts } from "../../store/postsSlice";
 import type { AppDispatch } from "../../store/store";
+import Image from 'next/image';
 
 interface CreatePostModalProps {
   open: boolean;
@@ -64,7 +64,7 @@ export default function CreatePostModal({ open, onOpenChange, onSuccess }: Creat
       formData.append("description", description);
       
       // Append all images
-      images.forEach((image, index) => {
+      images.forEach((image) => {
         formData.append("images", image);
       });
       
@@ -98,8 +98,8 @@ export default function CreatePostModal({ open, onOpenChange, onSuccess }: Creat
       showToast("Auction post created successfully!", "success");
       onOpenChange(false);
       onSuccess?.();
-    } catch (error: any) {
-      showToast(error.message || "Could not create auction post", "error");
+    } catch (error: unknown) {
+      showToast(error instanceof Error ? error.message : "Could not create auction post", "error");
     } finally {
       setLoading(false);
     }
@@ -158,9 +158,11 @@ export default function CreatePostModal({ open, onOpenChange, onSuccess }: Creat
           <div className="grid grid-cols-4 gap-2 mb-3">
             {imagePreviews.map((preview, index) => (
               <div key={index} className="relative">
-                <img 
+                <Image 
                   src={preview} 
                   alt={`Preview ${index + 1}`} 
+                  width={80}
+                  height={80}
                   className="h-20 w-full rounded-lg shadow border border-indigo-200 object-cover" 
                 />
                 <button

@@ -21,8 +21,8 @@ export const useMetaMask = () => {
     try {
       if (typeof window !== 'undefined' && window.ethereum) {
         const ethereum = window.ethereum;
-        const accounts = await ethereum.request({ method: 'eth_accounts' });
-        const chainId = await ethereum.request({ method: 'eth_chainId' });
+        const accounts = await ethereum.request({ method: 'eth_accounts' }) as string[];
+        const chainId = await ethereum.request({ method: 'eth_chainId' }) as string;
         
         if (accounts.length > 0) {
           setState(prev => ({
@@ -54,9 +54,9 @@ export const useMetaMask = () => {
       const ethereum = window.ethereum;
       const accounts = await ethereum.request({
         method: 'eth_requestAccounts',
-      });
+      }) as string[];
       
-      const chainId = await ethereum.request({ method: 'eth_chainId' });
+      const chainId = await ethereum.request({ method: 'eth_chainId' }) as string;
       
       setState(prev => ({
         ...prev,
@@ -68,11 +68,11 @@ export const useMetaMask = () => {
       }));
 
       return accounts[0];
-    } catch (error: any) {
+    } catch (error: unknown) {
       setState(prev => ({
         ...prev,
         isConnecting: false,
-        error: error.message || 'Failed to connect wallet',
+        error: error instanceof Error ? error.message : 'Failed to connect wallet',
       }));
       return null;
     }
@@ -100,12 +100,12 @@ export const useMetaMask = () => {
       const signature = await ethereum.request({
         method: 'personal_sign',
         params: [message, state.account],
-      })
+      }) as string;
       return signature;
-    } catch (error: any) {
+    } catch (error: unknown) {
       setState(prev => ({
         ...prev,
-        error: error.message || 'Failed to sign message',
+        error: error instanceof Error ? error.message : 'Failed to sign message',
       }));
       return null;
     }
@@ -127,7 +127,8 @@ export const useMetaMask = () => {
     if (typeof window !== 'undefined' && window.ethereum) {
       const ethereum = window.ethereum;
       
-      const handleAccountsChanged = (accounts: string[]) => {
+      const handleAccountsChanged = (...args: unknown[]) => {
+        const accounts = args[0] as string[];
         if (accounts.length === 0) {
           setState(prev => ({
             ...prev,
@@ -142,7 +143,8 @@ export const useMetaMask = () => {
         }
       };
 
-      const handleChainChanged = (chainId: string) => {
+      const handleChainChanged = (...args: unknown[]) => {
+        const chainId = args[0] as string;
         setState(prev => ({
           ...prev,
           chainId,
@@ -172,9 +174,9 @@ export const useMetaMask = () => {
 declare global {
   interface Window {
     ethereum?: {
-      request: (args: { method: string; params?: any[] }) => Promise<any>;
-      on: (event: string, callback: (...args: any[]) => void) => void;
-      removeListener: (event: string, callback: (...args: any[]) => void) => void;
+      request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+      on: (event: string, callback: (...args: unknown[]) => void) => void;
+      removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
       isMetaMask?: boolean;
     };
   }

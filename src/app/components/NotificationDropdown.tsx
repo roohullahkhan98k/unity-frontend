@@ -6,10 +6,13 @@ import { useNotificationSync } from '../hooks/useNotificationSync';
 import type { RootState, AppDispatch } from '../../store/store';
 import SkeletonNotification from './SkeletonNotification';
 import useAuthToken from '../hooks/useAuthToken';
+import Image from 'next/image';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 function getImageSrc(src:string|null|undefined){
+  if (!src) return '/placeholder-avatar.png';
+  if (src.startsWith("http")) return src;
   return `${BASE_URL}${src}`;
 }
 
@@ -19,7 +22,7 @@ export default function NotificationDropdown() {
   const token = useAuthToken();
   const { fetchNotifications: refreshNotifications } = useNotificationSync();
   
-  const hasUnreadNotifications = items.some((n: any) => !n.read);
+  const hasUnreadNotifications = items.some((n: { read: boolean }) => !n.read);
 
   useEffect(() => {
     if (!hasInitialized) dispatch(fetchNotifications({ includeRead: true, token }));
@@ -59,19 +62,19 @@ export default function NotificationDropdown() {
               </svg>
             </div>
             <p className="text-gray-500 text-sm font-medium">No notifications</p>
-            <p className="text-gray-400 text-xs mt-1">You're all caught up!</p>
+            <p className="text-gray-400 text-xs mt-1">You&apos;re all caught up!</p>
           </div>
         </div>
       ) : (
         <>
           <div className="max-h-[400px] overflow-y-auto">
-            {items.slice(0, 5).map((n: any) => (
+            {items.slice(0, 5).map((n: { _id: string; read: boolean; message: string; user?: { profileImage?: string }; postTitle?: string; createdAt: string }) => (
               <button
                 key={n._id}
                 onClick={() => handleMarkAsRead(n._id)}
                 className={`flex gap-3 w-full text-left px-4 py-2 hover:bg-gray-50 ${!n.read ? 'bg-indigo-50' : ''}`}
               >
-                <img src={getImageSrc(n.user?.profileImage)} className="h-9 w-9 rounded-full object-cover" />
+                <Image src={getImageSrc(n.user?.profileImage)} alt="Profile" width={36} height={36} className="h-9 w-9 rounded-full object-cover" />
                 <div className="flex-1">
                   <p className="text-sm text-gray-800">{n.message}</p>
                   {n.postTitle && <p className="text-xs text-gray-500 mt-0.5">Post: {n.postTitle}</p>}

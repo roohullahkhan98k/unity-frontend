@@ -1,6 +1,6 @@
 "use client";
 import { useSelector } from 'react-redux';
-import { Wifi, WifiOff, AlertCircle, RefreshCw } from 'lucide-react';
+import { Wifi, AlertCircle, RefreshCw } from 'lucide-react';
 import type { RootState } from '../../store/store';
 
 export default function ChatConnectionStatus() {

@@ -2,6 +2,26 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
+interface Post {
+  _id: string;
+  title: string;
+  description: string;
+  currentPrice: number;
+  startingPrice: number;
+  auctionEndTime: string;
+  user: {
+    _id: string;
+    username: string;
+    email: string;
+    profileImage?: string;
+  };
+  images: string[];
+  video?: string;
+  createdAt: string;
+  updatedAt: string;
+  status: 'active' | 'ended' | 'cancelled';
+}
+
 export const fetchAllPosts = createAsyncThunk(
   'posts/fetchAllPosts',
   async (_, { rejectWithValue }) => {
@@ -11,8 +31,8 @@ export const fetchAllPosts = createAsyncThunk(
       });
       if (!res.ok) throw new Error('Failed to fetch posts');
       return await res.json();
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : 'An error occurred');
     }
   }
 );
@@ -26,8 +46,8 @@ export const fetchUserPosts = createAsyncThunk(
       });
       if (!res.ok) throw new Error('Failed to fetch user posts');
       return await res.json();
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : 'An error occurred');
     }
   }
 );
@@ -47,8 +67,8 @@ export const createPost = createAsyncThunk(
         throw new Error(errorData.message || 'Failed to create post');
       }
       return await res.json();
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : 'An error occurred');
     }
   }
 );
@@ -68,8 +88,8 @@ export const updatePost = createAsyncThunk(
         throw new Error(errorData.message || 'Failed to update post');
       }
       return await res.json();
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : 'An error occurred');
     }
   }
 );
@@ -88,8 +108,8 @@ export const deletePost = createAsyncThunk(
         throw new Error(errorData.message || 'Failed to delete post');
       }
       return postId;
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : 'An error occurred');
     }
   }
 );
@@ -109,8 +129,8 @@ export const cancelPost = createAsyncThunk(
       }
       const data = await res.json();
       return data.post; // Return the updated post
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : 'An error occurred');
     }
   }
 );
@@ -134,8 +154,8 @@ export const reactivatePost = createAsyncThunk(
       }
       const data = await res.json();
       return data.post; // Return the updated post
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : 'An error occurred');
     }
   }
 );
@@ -157,8 +177,8 @@ export const buyNow = createAsyncThunk(
         throw new Error(errorData.message || 'Failed to buy now');
       }
       return await res.json();
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : 'An error occurred');
     }
   }
 );
@@ -180,8 +200,8 @@ export const endAuction = createAsyncThunk(
         throw new Error(errorData.message || 'Failed to end auction');
       }
       return await res.json();
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : 'An error occurred');
     }
   }
 );
@@ -189,7 +209,7 @@ export const endAuction = createAsyncThunk(
 const postsSlice = createSlice({
   name: 'posts',
   initialState: {
-    posts: [] as any[],
+    posts: [] as Post[],
     loading: false,
     error: null as string | null,
     fetched: false,

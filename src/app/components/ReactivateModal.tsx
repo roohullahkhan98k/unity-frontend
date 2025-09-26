@@ -43,7 +43,7 @@ export default function ReactivateModal({
           </div>
           
           <Dialog.Description className="text-gray-600 mb-4">
-            Reactivate "{postTitle}" with a new auction duration. The auction will start fresh from now.
+            Reactivate &quot;{postTitle}&quot; with a new auction duration. The auction will start fresh from now.
           </Dialog.Description>
           
           <div className="mb-6">

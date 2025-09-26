@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "../../hooks/useToast";
@@ -7,7 +7,7 @@ import MetaMaskLogin from "../../components/MetaMaskLogin";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export default function Register() {
+function RegisterForm() {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -47,8 +47,8 @@ export default function Register() {
       document.cookie = `token=${data.token}; path=/;`;
       showToast("Registration successful!", "success");
       router.push("/home");
-    } catch (err: any) {
-      showToast(err.message, "error");
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : "Registration failed", "error");
     } finally {
       setLoading(false);
     }
@@ -149,5 +149,20 @@ export default function Register() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Register() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-400 to-purple-500 p-5">
+      <div className="bg-white p-10 rounded-xl shadow-2xl w-full max-w-md">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    </div>}>
+      <RegisterForm />
+    </Suspense>
   );
 } 

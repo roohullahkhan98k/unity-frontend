@@ -1,25 +1,21 @@
-import { useEffect, useRef, useState } from 'react';
-import { useMetaMask } from './useMetaMask';
-import { BalanceService } from '../services/balanceService';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { BalanceService, BalanceData } from '../services/balanceService';
 import useAuthToken from './useAuthToken';
-import { useToast } from './useToast';
 
 export const useBalanceRefresh = (
-  onBalanceUpdate: (balance: any) => void,
+  onBalanceUpdate: (balance: BalanceData) => void,
   intervalMs: number = 30000, // 30 seconds default
   isWalletConnected: boolean = false
 ) => {
-  const { isConnected, account } = useMetaMask();
   const token = useAuthToken();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const showToast = useToast();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  const fetchBalance = async () => {
+  const fetchBalance = useCallback(async () => {
     if (!token || !isWalletConnected) return;
     
     try {
@@ -29,7 +25,7 @@ export const useBalanceRefresh = (
       // Silently handle errors for auto-refresh
       console.warn('Auto-refresh balance failed:', error);
     }
-  };
+  }, [token, isWalletConnected, onBalanceUpdate]);
 
   useEffect(() => {
     // Clear existing interval
@@ -53,7 +49,7 @@ export const useBalanceRefresh = (
         intervalRef.current = null;
       }
     };
-  }, [isWalletConnected, token, intervalMs, isClient]);
+  }, [isWalletConnected, token, intervalMs, isClient, fetchBalance]);
 
   return { fetchBalance };
 }; 

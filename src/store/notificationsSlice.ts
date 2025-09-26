@@ -12,8 +12,8 @@ export const fetchNotifications = createAsyncThunk(
       });
       if (!res.ok) throw new Error('Failed');
       return await res.json();
-    } catch (e: any) {
-      return rejectWithValue(e.message);
+    } catch (e: unknown) {
+      return rejectWithValue(e instanceof Error ? e.message : 'An error occurred');
     }
   }
 );
@@ -28,8 +28,8 @@ export const fetchUnreadCount = createAsyncThunk(
       });
       if (!res.ok) throw new Error('Failed');
       return await res.json();
-    } catch (e: any) {
-      return rejectWithValue(e.message);
+    } catch (e: unknown) {
+      return rejectWithValue(e instanceof Error ? e.message : 'An error occurred');
     }
   }
 );
@@ -45,8 +45,8 @@ export const markNotificationRead = createAsyncThunk(
       });
       if (!res.ok) throw new Error('Failed');
       return id;
-    } catch (e: any) {
-      return rejectWithValue(e.message);
+    } catch (e: unknown) {
+      return rejectWithValue(e instanceof Error ? e.message : 'An error occurred');
     }
   }
 );
@@ -62,14 +62,23 @@ export const markAllNotificationsRead = createAsyncThunk(
       });
       if (!res.ok) throw new Error('Failed');
       return true;
-    } catch (e: any) {
-      return rejectWithValue(e.message);
+    } catch (e: unknown) {
+      return rejectWithValue(e instanceof Error ? e.message : 'An error occurred');
     }
   }
 );
 
+interface Notification {
+  _id: string;
+  read: boolean;
+  message: string;
+  type: string;
+  createdAt: string;
+  [key: string]: unknown;
+}
+
 interface NotiState {
-  items: any[];
+  items: Notification[];
   unreadCount: number;
   loading: boolean;
   error: string | null;

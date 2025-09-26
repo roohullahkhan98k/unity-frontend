@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "../../hooks/useToast";
@@ -7,7 +7,7 @@ import MetaMaskLogin from "../../components/MetaMaskLogin";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export default function Login() {
+function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -39,8 +39,8 @@ export default function Login() {
       document.cookie = `token=${data.token}; path=/;`;
       showToast("Login successful!", "success");
       router.push("/home");
-    } catch (err: any) {
-      showToast(err.message, "error");
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : "Login failed", "error");
     } finally {
       setLoading(false);
     }
@@ -104,7 +104,7 @@ export default function Login() {
 
         <div className="text-center mt-5">
           <p className="text-[#667eea] font-semibold">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/register" className="hover:underline">Create one here</Link>
           </p>
         </div>
@@ -113,5 +113,20 @@ export default function Login() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Login() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-400 to-purple-500 p-5">
+      <div className="bg-white p-10 rounded-xl shadow-2xl w-full max-w-md">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    </div>}>
+      <LoginForm />
+    </Suspense>
   );
 } 

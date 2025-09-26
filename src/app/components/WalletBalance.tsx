@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Wallet, RefreshCw, AlertCircle } from "lucide-react";
 import { useMetaMask } from "../hooks/useMetaMask";
 import { BalanceService, BalanceData } from "../services/balanceService";
@@ -12,17 +12,17 @@ export default function WalletBalance() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<{ walletAddress?: string } | null>(null);
   const [isClient, setIsClient] = useState(false);
-  const { account, isConnected } = useMetaMask();
+  const { isConnected } = useMetaMask();
   const token = useAuthToken();
   const showToast = useToast();
 
   // Check if user has wallet address in their profile
-  const hasWalletAddress = userProfile?.walletAddress;
+  const hasWalletAddress = !!userProfile?.walletAddress;
   const isWalletConnected = isConnected && hasWalletAddress;
 
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     if (!token) return;
     
     try {
@@ -40,9 +40,9 @@ export default function WalletBalance() {
     } catch (error) {
       console.warn('Failed to fetch user profile:', error);
     }
-  };
+  }, [token]);
 
-  const fetchBalance = async () => {
+  const fetchBalance = useCallback(async () => {
     if (!token || !isWalletConnected) return;
     
     setLoading(true);
@@ -51,13 +51,14 @@ export default function WalletBalance() {
       const balanceData = await BalanceService.getAccountBalance(token);
       setBalance(balanceData);
       setLastUpdated(new Date());
-    } catch (err: any) {
-      setError(err.message);
-      showToast(err.message, "error");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch balance";
+      setError(errorMessage);
+      showToast(errorMessage, "error");
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, isWalletConnected, showToast]);
 
   // Auto-refresh balance every 30 seconds
   useBalanceRefresh((balanceData) => {
@@ -73,13 +74,13 @@ export default function WalletBalance() {
     if (token && isClient) {
       fetchUserProfile();
     }
-  }, [token, isClient]);
+  }, [token, isClient, fetchUserProfile]);
 
   useEffect(() => {
     if (token && isWalletConnected && isClient) {
       fetchBalance();
     }
-  }, [token, isWalletConnected, isClient]);
+  }, [token, isWalletConnected, isClient, fetchBalance]);
 
   const formatBalance = (balance: string) => {
     const numBalance = parseFloat(balance);

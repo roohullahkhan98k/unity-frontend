@@ -12,7 +12,6 @@ import { getFavorites } from "../../store/favoritesSlice";
 import type { RootState, AppDispatch } from "../../store/store";
 
 export default function Home() {
-  const [username, setUsername] = useState("");
   const [open, setOpen] = useState(false);
   const [initialSkeleton, setInitialSkeleton] = useState(true);
 
@@ -27,12 +26,6 @@ export default function Home() {
     return () => clearTimeout(t);
   }, []);
 
-  useEffect(() => {
-    const storedUsername = localStorage.getItem("username");
-    if (storedUsername) {
-      setUsername(storedUsername);
-    }
-  }, []);
 
   useEffect(() => {
     // Always fetch all posts when home page loads

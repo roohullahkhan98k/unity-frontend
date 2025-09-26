@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Wallet, AlertCircle } from "lucide-react";
 import { useMetaMask } from "../hooks/useMetaMask";
 import useAuthToken from "../hooks/useAuthToken";
@@ -7,9 +7,9 @@ import { useToast } from "../hooks/useToast";
 import { useRouter } from "next/navigation";
 
 export default function WalletConnectionStatus() {
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<{ walletAddress?: string } | null>(null);
   const [isClient, setIsClient] = useState(false);
-  const { account, isConnected, connectWallet } = useMetaMask();
+  const { isConnected, connectWallet } = useMetaMask();
   const token = useAuthToken();
   const showToast = useToast();
   const router = useRouter();
@@ -18,7 +18,7 @@ export default function WalletConnectionStatus() {
   const hasWalletAddress = userProfile?.walletAddress;
   const isWalletConnected = isConnected && hasWalletAddress;
 
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     if (!token) return;
     
     try {
@@ -36,7 +36,7 @@ export default function WalletConnectionStatus() {
     } catch (error) {
       console.warn('Failed to fetch user profile:', error);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     setIsClient(true);
@@ -46,7 +46,7 @@ export default function WalletConnectionStatus() {
     if (token && isClient) {
       fetchUserProfile();
     }
-  }, [token, isClient]);
+  }, [token, isClient, fetchUserProfile]);
 
   const handleConnectWallet = async () => {
     if (!isConnected) {

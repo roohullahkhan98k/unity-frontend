@@ -12,8 +12,8 @@ export const getFavorites = createAsyncThunk(
       });
       if (!res.ok) throw new Error('Failed to fetch favorites');
       return await res.json(); // returns array of posts or ids
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : 'An error occurred');
     }
   }
 );
@@ -29,8 +29,8 @@ export const addFavorite = createAsyncThunk(
       });
       if (!res.ok) throw new Error('Failed to add favorite');
       return postId;
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : 'An error occurred');
     }
   }
 );
@@ -51,7 +51,7 @@ const favoritesSlice = createSlice({
       })
       .addCase(getFavorites.fulfilled, (state, action) => {
         state.loading = false;
-        state.favorites = action.payload.map((p: any) => p._id ?? p); // support array of posts or ids
+        state.favorites = action.payload.map((p: unknown) => (p as { _id?: string })._id ?? p as string); // support array of posts or ids
       })
       .addCase(getFavorites.rejected, (state, action) => {
         state.loading = false;

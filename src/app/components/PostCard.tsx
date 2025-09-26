@@ -1,31 +1,32 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Heart, Clock, DollarSign, Zap, MessageCircle } from "lucide-react";
+import { Clock, DollarSign, MessageCircle } from "lucide-react";
 import { useSelector } from 'react-redux';
 import { useCountdown } from '../hooks/useCountdown';
 import type { RootState } from '../../store/store';
+import Image from 'next/image';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type Post = {
   _id: string;
-  user: { username: string; email: string; profileImage?: string };
-  images: string[];
-  video?: string;
   title: string;
   description: string;
-  createdAt: string;
-  startingPrice: number;
   currentPrice: number;
-  buyNowPrice?: number;
-  auctionDuration: number;
+  startingPrice: number;
   auctionEndTime: string;
-  status: 'live' | 'sold' | 'expired' | 'cancelled';
-  soldTo?: { username: string; profileImage?: string };
-  soldAt?: string;
-  soldPrice?: number;
-  soldVia?: 'auction' | 'buyNow';
+  user: {
+    _id: string;
+    username: string;
+    email: string;
+    profileImage?: string;
+  };
+  images: string[];
+  video?: string;
+  createdAt: string;
+  updatedAt: string;
+  status: 'active' | 'ended' | 'cancelled';
 };
 
 interface PostCardProps {
@@ -34,7 +35,6 @@ interface PostCardProps {
 }
 
 export default function PostCard({ post, showActions = true }: PostCardProps) {
-  const [isFavorite, setIsFavorite] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const router = useRouter();
   
@@ -63,7 +63,7 @@ export default function PostCard({ post, showActions = true }: PostCardProps) {
   };
 
   const getImageSrc = (image: string) => {
-    if (!image) return undefined;
+    if (!image) return '/placeholder-image.png';
     if (image.startsWith("http")) return image;
     return `${BASE_URL}${image}`;
   };
@@ -71,12 +71,10 @@ export default function PostCard({ post, showActions = true }: PostCardProps) {
   const getStatusColor = () => {
     const isExpired = new Date(post.auctionEndTime) < new Date();
     switch (post.status) {
-      case 'live':
+      case 'active':
         return isExpired ? 'text-red-500' : 'text-green-500';
-      case 'sold':
+      case 'ended':
         return 'text-blue-500';
-      case 'expired':
-        return 'text-red-500';
       case 'cancelled':
         return 'text-gray-500';
       default:
@@ -87,12 +85,10 @@ export default function PostCard({ post, showActions = true }: PostCardProps) {
   const getStatusText = () => {
     const isExpired = new Date(post.auctionEndTime) < new Date();
     switch (post.status) {
-      case 'live':
+      case 'active':
         return isExpired ? 'Expired' : 'Live';
-      case 'sold':
-        return 'Sold';
-      case 'expired':
-        return 'Expired';
+      case 'ended':
+        return 'Ended';
       case 'cancelled':
         return 'Cancelled';
       default:
@@ -152,9 +148,11 @@ export default function PostCard({ post, showActions = true }: PostCardProps) {
               {/* Images */}
               {post.images.map((image, index) => (
                 <div key={index} className="flex-shrink-0 w-full h-full">
-                  <img
+                  <Image
                     src={getImageSrc(image)}
                     alt={`${post.title} - Image ${index + 1}`}
+                    width={400}
+                    height={300}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -232,13 +230,6 @@ export default function PostCard({ post, showActions = true }: PostCardProps) {
             <span className="text-lg font-bold text-green-600">${currentPrice.toFixed(2)}</span>
           </div>
           
-          {post.buyNowPrice && (
-            <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-blue-600" />
-              <span className="text-sm text-gray-600">Buy Now:</span>
-              <span className="text-sm font-semibold text-blue-600">${post.buyNowPrice.toFixed(2)}</span>
-            </div>
-          )}
         </div>
 
         {/* Footer */}

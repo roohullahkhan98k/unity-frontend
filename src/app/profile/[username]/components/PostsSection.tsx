@@ -6,32 +6,32 @@ import CreatePostModal from "../../../components/CreatePostModal";
 import ConfirmationModal from "../../../components/ConfirmationModal";
 import ReactivateModal from "../../../components/ReactivateModal";
 import { useToast } from "../../../hooks/useToast";
-import { Pencil, Trash2, Plus, Clock, DollarSign, Zap, X, RotateCcw } from 'lucide-react';
+import { Pencil, Trash2, Plus, Clock, DollarSign, X, RotateCcw } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchUserPosts, updatePost, deletePost, cancelPost, reactivatePost } from '../../../../store/postsSlice';
 import type { RootState, AppDispatch } from '../../../../store/store';
-import Loader from "../../../components/Loader";
-import SkeletonPostCard from "../../../components/SkeletonPostCard";
+import Image from 'next/image';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type Post = {
   _id: string;
-  user: { username: string; email: string };
-  image: string;
   title: string;
   description: string;
-  createdAt: string;
-  startingPrice: number;
   currentPrice: number;
-  buyNowPrice?: number;
-  auctionDuration: number;
+  startingPrice: number;
   auctionEndTime: string;
-  status: 'live' | 'sold' | 'expired' | 'cancelled';
-  soldTo?: { username: string; profileImage?: string };
-  soldAt?: string;
-  soldPrice?: number;
-  soldVia?: 'auction' | 'buyNow';
+  user: {
+    _id: string;
+    username: string;
+    email: string;
+    profileImage?: string;
+  };
+  images: string[];
+  video?: string;
+  createdAt: string;
+  updatedAt: string;
+  status: 'active' | 'ended' | 'cancelled';
 };
 
 // Format time remaining
@@ -67,7 +67,6 @@ export default function PostsSection() {
   const [postToReactivate, setPostToReactivate] = useState<Post | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
-  const [editBuyNowPrice, setEditBuyNowPrice] = useState("");
   const [editImage, setEditImage] = useState<File | null>(null);
   const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
@@ -108,7 +107,7 @@ export default function PostsSection() {
   }, [token, dispatch]);
 
   function getImageSrc(image: string) {
-    if (!image) return undefined;
+    if (!image) return '/placeholder-image.png';
     if (image.startsWith("http")) return image;
     return `${BASE_URL}${image}`;
   }
@@ -142,8 +141,7 @@ export default function PostsSection() {
     setEditPost(post);
     setEditTitle(post.title);
     setEditDescription(post.description);
-    setEditBuyNowPrice(post.buyNowPrice?.toString() || "");
-    setEditImagePreview(getImageSrc(post.image) || null);
+    setEditImagePreview(getImageSrc(post.images[0]) || null);
     setEditImage(null);
     setEditOpen(true);
   }
@@ -163,7 +161,7 @@ export default function PostsSection() {
       };
       reader.readAsDataURL(file);
     } else {
-      setEditImagePreview(editPost ? getImageSrc(editPost.image) || null : null);
+      setEditImagePreview(editPost ? getImageSrc(editPost.images[0]) || null : null);
     }
   }
 
@@ -175,9 +173,6 @@ export default function PostsSection() {
       const formData = new FormData();
       formData.append("title", editTitle);
       formData.append("description", editDescription);
-      if (editBuyNowPrice) {
-        formData.append("buyNowPrice", editBuyNowPrice);
-      }
       if (editImage) formData.append("image", editImage);
       await dispatch(updatePost({ postId: editPost._id, formData, token })).unwrap();
       showToast("Auction updated successfully!", "success");
@@ -185,8 +180,8 @@ export default function PostsSection() {
       setEditPost(null);
       setEditImage(null);
       setEditImagePreview(null);
-    } catch (error: any) {
-      showToast(error.message || "Could not update auction", "error");
+    } catch (error: unknown) {
+      showToast(error instanceof Error ? error.message : "Could not update auction", "error");
     } finally {
       setUpdating(false);
     }
@@ -196,8 +191,8 @@ export default function PostsSection() {
     try {
       await dispatch(cancelPost({ postId: post._id, token })).unwrap();
       showToast("Auction cancelled successfully!", "success");
-    } catch (error: any) {
-      showToast(error.message || "Could not cancel auction", "error");
+    } catch (error: unknown) {
+      showToast(error instanceof Error ? error.message : "Could not cancel auction", "error");
     }
   }
 
@@ -213,8 +208,8 @@ export default function PostsSection() {
       await dispatch(deletePost({ postId: postToDelete._id, token })).unwrap();
       showToast("Auction deleted successfully!", "success");
       setPostToDelete(null);
-    } catch (error: any) {
-      showToast(error.message || "Could not delete auction", "error");
+    } catch (error: unknown) {
+      showToast(error instanceof Error ? error.message : "Could not delete auction", "error");
     }
   }
 
@@ -230,27 +225,25 @@ export default function PostsSection() {
       await dispatch(reactivatePost({ postId: postToReactivate._id, auctionDuration, token })).unwrap();
       showToast("Auction reactivated successfully!", "success");
       setPostToReactivate(null);
-    } catch (error: any) {
-      showToast(error.message || "Could not reactivate auction", "error");
+    } catch (error: unknown) {
+      showToast(error instanceof Error ? error.message : "Could not reactivate auction", "error");
     }
   }
 
   const handleCreateSuccess = () => {
     // Refresh user posts after creating a new auction
     if (token) {
-      dispatch(fetchUserPosts(posts[0]?.user?.userId || ''));
+      dispatch(fetchUserPosts(posts[0]?.user?._id || ''));
     }
   };
 
   const getStatusColor = (post: Post) => {
     const isExpired = new Date(post.auctionEndTime) < new Date();
     switch (post.status) {
-      case 'live':
+      case 'active':
         return isExpired ? 'text-red-500' : 'text-green-500';
-      case 'sold':
+      case 'ended':
         return 'text-blue-500';
-      case 'expired':
-        return 'text-red-500';
       case 'cancelled':
         return 'text-gray-500';
       default:
@@ -261,12 +254,10 @@ export default function PostsSection() {
   const getStatusText = (post: Post) => {
     const isExpired = new Date(post.auctionEndTime) < new Date();
     switch (post.status) {
-      case 'live':
+      case 'active':
         return isExpired ? 'Expired' : 'Live';
-      case 'sold':
-        return 'Sold';
-      case 'expired':
-        return 'Expired';
+      case 'ended':
+        return 'Ended';
       case 'cancelled':
         return 'Cancelled';
       default:
@@ -352,10 +343,12 @@ export default function PostsSection() {
                     <div className={`w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 ${
                       isCancelled(post) ? 'bg-gray-300' : 'bg-gray-200'
                     }`}>
-                      {post.image ? (
-                        <img
-                          src={getImageSrc(post.image)}
+                      {post.images[0] ? (
+                        <Image
+                          src={getImageSrc(post.images[0])}
                           alt={post.title}
+                          width={80}
+                          height={80}
                           className={`w-full h-full object-cover ${
                             isCancelled(post) ? 'grayscale opacity-50' : ''
                           }`}
@@ -408,18 +401,6 @@ export default function PostsSection() {
                           {isCancelled(post) ? 'Cancelled' : formatTimeRemaining(post.auctionEndTime)}
                         </span>
                       </div>
-                      {post.buyNowPrice && (
-                        <div className="flex items-center gap-1">
-                          <Zap className={`w-4 h-4 ${
-                            isCancelled(post) ? 'text-gray-400' : 'text-blue-600'
-                          }`} />
-                          <span className={`text-sm font-semibold ${
-                            isCancelled(post) ? 'text-gray-400' : 'text-blue-600'
-                          }`}>
-                            ${post.buyNowPrice.toFixed(2)}
-                          </span>
-                        </div>
-                      )}
                     </div>
 
                     <p className={`text-xs mt-2 font-medium ${
@@ -443,7 +424,7 @@ export default function PostsSection() {
                     </button>
                     
                     {/* Edit button - only for live auctions */}
-                    {post.status === 'live' && (
+                    {post.status === 'active' && (
                       <button
                         onClick={() => handleEditClick(post)}
                         className="p-2 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all duration-200 cursor-pointer"
@@ -454,7 +435,7 @@ export default function PostsSection() {
                     )}
 
                     {/* Cancel button - only for live auctions */}
-                    {post.status === 'live' && (
+                    {post.status === 'active' && (
                       <button
                         onClick={() => handleCancelClick(post)}
                         className="p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200 cursor-pointer"
@@ -560,20 +541,16 @@ export default function PostsSection() {
                 <p className="text-sm text-gray-600">Time Remaining</p>
                 <p className="text-lg font-bold text-orange-600">{formatTimeRemaining(viewPost.auctionEndTime)}</p>
               </div>
-              {viewPost.buyNowPrice && (
-                <div>
-                  <p className="text-sm text-gray-600">Buy Now Price</p>
-                  <p className="text-lg font-bold text-blue-600">${viewPost.buyNowPrice.toFixed(2)}</p>
-                </div>
-              )}
             </div>
 
             {/* Image */}
-            {viewPost.image && (
+            {viewPost.images[0] && (
               <div className="mt-2">
-                <img
-                  src={getImageSrc(viewPost.image)}
+                <Image
+                  src={getImageSrc(viewPost.images[0])}
                   alt={viewPost.title}
+                  width={400}
+                  height={192}
                   className="w-full h-auto max-h-48 rounded-lg object-cover shadow-md"
                 />
               </div>
@@ -587,7 +564,7 @@ export default function PostsSection() {
         <form onSubmit={handleEditSubmit} className="flex flex-col gap-4">
           {editImagePreview && (
             <div className="flex justify-center mb-2">
-              <img src={editImagePreview} alt="Preview" className="h-40 w-auto rounded-lg shadow border border-indigo-200 object-contain" />
+              <Image src={editImagePreview} alt="Preview" width={160} height={160} className="h-40 w-auto rounded-lg shadow border border-indigo-200 object-contain" />
             </div>
           )}
           <input
@@ -611,8 +588,8 @@ export default function PostsSection() {
             min="0"
             className="border rounded px-3 py-2"
             placeholder="Buy Now Price (optional)"
-            value={editBuyNowPrice}
-            onChange={e => setEditBuyNowPrice(e.target.value)}
+            value=""
+            onChange={() => {}}
           />
           <input
             type="file"

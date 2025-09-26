@@ -1,6 +1,6 @@
 import { useRef, useCallback } from 'react';
 
-export function useThrottle<T extends (...args: any[]) => any>(
+export function useThrottle<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number
 ): T {
@@ -8,7 +8,7 @@ export function useThrottle<T extends (...args: any[]) => any>(
   const lastCallTimer = useRef<NodeJS.Timeout | null>(null);
 
   return useCallback(
-    ((...args: any[]) => {
+    ((...args: unknown[]) => {
       const now = Date.now();
 
       if (now - lastCall.current >= delay) {
@@ -31,14 +31,14 @@ export function useThrottle<T extends (...args: any[]) => any>(
   );
 }
 
-export function useDebounce<T extends (...args: any[]) => any>(
+export function useDebounce<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number
 ): T {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   return useCallback(
-    ((...args: any[]) => {
+    ((...args: unknown[]) => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }

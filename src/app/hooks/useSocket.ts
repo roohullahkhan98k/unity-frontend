@@ -42,8 +42,8 @@ export const useSocket = () => {
         console.log('Token algorithm:', header.alg);
         console.log('Token expires:', new Date(payload.exp * 1000));
       }
-    } catch (error: any) {
-      console.log('Token parsing failed:', error.message);
+    } catch (error: unknown) {
+      console.log('Token parsing failed:', error instanceof Error ? error.message : 'Unknown error');
     }
     
     socketRef.current = io(SOCKET_URL, {
@@ -87,7 +87,7 @@ export const useSocket = () => {
       }
     });
 
-    socketRef.current.on('error', (error: any) => {
+    socketRef.current.on('error', (error: { message?: string }) => {
       console.error('Socket error:', error);
       dispatch(setError(error.message || 'Connection error'));
       
@@ -105,46 +105,54 @@ export const useSocket = () => {
       }
     });
 
-    socketRef.current.on('new-message', (message: any) => {
+    socketRef.current.on('new-message', (message: { _id: string; content: string; sender: { _id: string; username: string; profileImage?: string }; timestamp: string; postId: string }) => {
       console.log('Received message from backend:', message);
       console.log('Message structure:', JSON.stringify(message, null, 2));
       
       // Extract user data from the backend message structure
-      const userData = message.user || {};
-      const username = userData.username || message.username;
-      const userId = userData._id || message.userId;
-      const profileImage = userData.profileImage || message.profileImage;
+      const userData = message.sender || {};
+      const username = userData.username;
+      const userId = userData._id;
+      const profileImage = userData.profileImage;
       
       console.log('Extracted username:', username);
       console.log('Extracted userId:', userId);
       console.log('Extracted profileImage:', profileImage);
       
       dispatch(addMessage({
-        id: message._id || message.id || Date.now().toString(),
+        id: message._id || Date.now().toString(),
         postId: message.postId,
         userId: userId,
         username: username,
         profileImage: profileImage,
-        message: message.message,
+        message: message.content,
         timestamp: message.timestamp || new Date().toISOString(),
-        type: message.type || 'user',
+        type: 'user',
       }));
     });
 
-    socketRef.current.on('room-participants', (data: any) => {
+    socketRef.current.on('room-participants', (data: { participants: string[] }) => {
       console.log('Room participants event:', data);
       
       const participants = data.participants || [];
       console.log('Participants received:', participants);
       
-      dispatch(setParticipants(participants));
+      // Transform string[] to ChatParticipant[]
+      const chatParticipants = participants.map(participant => ({
+        userId: participant,
+        username: participant, // Use participant as username for now
+        profileImage: undefined,
+        isTyping: false
+      }));
+      
+      dispatch(setParticipants(chatParticipants));
     });
 
-    socketRef.current.on('user-joined', (user: any) => {
+    socketRef.current.on('user-joined', (user: { _id: string; username: string; profileImage?: string }) => {
       console.log('User joined event:', user);
       
       // Handle both direct user object and nested user structure
-      const userId = user.userId || user._id;
+      const userId = user._id;
       const username = user.username;
       const profileImage = user.profileImage;
       
@@ -158,18 +166,18 @@ export const useSocket = () => {
       }));
     });
 
-    socketRef.current.on('user-left', (user: any) => {
+    socketRef.current.on('user-left', (user: { _id: string; username: string }) => {
       console.log('User left event:', user);
       
-      const userId = user.userId || user._id;
+      const userId = user._id;
       
       dispatch(removeParticipant(userId));
     });
 
-    socketRef.current.on('user-typing', (data: any) => {
+    socketRef.current.on('user-typing', (data: { userId: string; isTyping: boolean }) => {
       console.log('User typing event:', data);
       
-      const userId = data.userId || data._id;
+      const userId = data.userId;
       
       dispatch(setUserTyping({
         userId: userId,
@@ -177,19 +185,19 @@ export const useSocket = () => {
       }));
     });
 
-    socketRef.current.on('chat-disabled', (data: any) => {
+    socketRef.current.on('chat-disabled', (data: { disabled: boolean; reason?: string }) => {
       console.log('Chat disabled event:', data);
-      dispatch(setError(data.message || 'Chat is disabled'));
+      dispatch(setError(data.reason || 'Chat is disabled'));
     });
 
-    socketRef.current.on('auction-event', (data: any) => {
+    socketRef.current.on('auction-event', (data: { type: string; postId: string; [key: string]: unknown }) => {
       console.log('Auction event:', data);
       if (data.type === 'auction-ended') {
         dispatch(setError('Auction has ended. Chat is now disabled.'));
       }
     });
 
-    socketRef.current.on('system-message', (data: any) => {
+    socketRef.current.on('system-message', (data: { message: string; type?: string }) => {
       console.log('System message:', data);
       dispatch(addMessage({
         id: Date.now().toString(),
@@ -197,12 +205,12 @@ export const useSocket = () => {
         userId: 'system',
         username: 'System',
         message: data.message,
-        timestamp: data.timestamp || new Date().toISOString(),
+        timestamp: new Date().toISOString(),
         type: 'system',
       }));
     });
 
-  }, [token, dispatch]);
+  }, [token, dispatch, currentPostId]);
 
   const disconnect = useCallback(() => {
     if (socketRef.current) {
@@ -251,13 +259,13 @@ export const useSocket = () => {
         console.log('Fetched messages:', data);
         
         if (data.messages && Array.isArray(data.messages)) {
-          const formattedMessages = data.messages.map((msg: any) => ({
-            id: msg._id || msg.id,
+          const formattedMessages = data.messages.map((msg: { _id: string; content: string; sender: { _id: string; username: string; profileImage?: string }; timestamp: string }) => ({
+            id: msg._id,
             postId: postId,
-            userId: msg.user._id || msg.userId,
-            username: msg.user.username,
-            profileImage: msg.user.profileImage,
-            message: msg.message,
+            userId: msg.sender._id,
+            username: msg.sender.username,
+            profileImage: msg.sender.profileImage,
+            message: msg.content,
             timestamp: msg.timestamp,
             type: 'user',
           }));

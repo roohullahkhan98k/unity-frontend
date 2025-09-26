@@ -59,8 +59,8 @@ export default function MetaMaskLogin({ onSuccess, mode, onModeChange }: MetaMas
       }
 
       onSuccess(authResponse.token);
-    } catch (error: any) {
-      showToast(error.message, 'error');
+    } catch (error: unknown) {
+      showToast(error instanceof Error ? error.message : 'Authentication failed', 'error');
     } finally {
       setIsAuthenticating(false);
     }

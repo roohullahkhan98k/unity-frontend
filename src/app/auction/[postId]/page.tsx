@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Heart, Clock, DollarSign, User, Zap } from "lucide-react";
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { addFavorite } from "../../../store/favoritesSlice";
 import { useToast } from "../../hooks/useToast";
 import useAuthToken from "../../hooks/useAuthToken";
@@ -10,12 +10,13 @@ import { useCountdown } from "../../hooks/useCountdown";
 import BiddingSection from "../../components/BiddingSection";
 import SellerActions from "../../components/SellerActions";
 import ChatToggle from "../../components/ChatToggle";
-import type { RootState, AppDispatch } from "../../../store/store";
+import type { AppDispatch } from "../../../store/store";
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
+import Image from 'next/image';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -48,7 +49,7 @@ export default function AuctionDetails() {
   const [isFavorite, setIsFavorite] = useState(false);
   
   // Use custom countdown hook
-  const timeRemaining = useCountdown(post?.auctionEndTime || null);
+  useCountdown(post?.auctionEndTime || null);
   
   const dispatch = useDispatch<AppDispatch>();
   const token = useAuthToken();
@@ -102,7 +103,7 @@ export default function AuctionDetails() {
     if (params.postId) {
       fetchAuctionDetails();
     }
-  }, [params.postId]);
+  }, [params.postId, showToast]);
 
 
 
@@ -116,13 +117,13 @@ export default function AuctionDetails() {
       await dispatch(addFavorite({ postId: post!._id, token })).unwrap();
       setIsFavorite(true);
       showToast("Added to favorites!", "success");
-    } catch (error) {
+    } catch {
       showToast("Failed to add to favorites", "error");
     }
   };
 
   const getImageSrc = (image: string) => {
-    if (!image) return undefined;
+    if (!image) return '/placeholder-image.png';
     if (image.startsWith("http")) return image;
     return `${BASE_URL}${image}`;
   };
@@ -266,9 +267,11 @@ export default function AuctionDetails() {
                     {/* Images */}
                     {post.images.map((image, index) => (
                       <SwiperSlide key={index}>
-                        <img
+                        <Image
                           src={getImageSrc(image)}
                           alt={`${post.title} - Image ${index + 1}`}
+                          width={800}
+                          height={384}
                           className="w-full h-96 object-cover"
                         />
                       </SwiperSlide>

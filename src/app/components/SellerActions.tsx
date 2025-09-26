@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../store/store';
+import { RootState, AppDispatch } from '../../store/store';
 import { 
   sellToHighestBidder
 } from '../../store/bidsSlice';
@@ -22,7 +22,7 @@ export default function SellerActions({ postId, currentPrice }: SellerActionsPro
   const [showSellModal, setShowSellModal] = useState(false);
   const [sellAction, setSellAction] = useState<'highest' | null>(null);
   
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const token = useAuthToken();
   const showToast = useToast();
   
@@ -42,12 +42,12 @@ export default function SellerActions({ postId, currentPrice }: SellerActionsPro
   const confirmSell = async () => {
     try {
       if (sellAction === 'highest') {
-        await dispatch(sellToHighestBidder({ postId, token }) as any);
+        await dispatch(sellToHighestBidder({ postId, token }));
         showToast('Auction sold to highest bidder successfully!', 'success');
       }
       setShowSellModal(false);
       setSellAction(null);
-    } catch (err) {
+    } catch {
       showToast('Failed to sell auction', 'error');
     }
   };

@@ -2,10 +2,11 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { fetchNotifications, fetchUnreadCount } from '../../store/notificationsSlice';
+import { AppDispatch } from '../../store/store';
 import useAuthToken from './useAuthToken';
 
 export function useNotificationSync() {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const token = useAuthToken();
   const lastFetchTime = useRef<number>(0);
   const isPolling = useRef<boolean>(false);

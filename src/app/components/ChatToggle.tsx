@@ -1,6 +1,6 @@
 "use client";
 import { useState } from 'react';
-import { MessageCircle, X, Users } from 'lucide-react';
+import { MessageCircle, X } from 'lucide-react';
 import AuctionChat from './AuctionChat';
 import useAuthToken from '../hooks/useAuthToken';
 

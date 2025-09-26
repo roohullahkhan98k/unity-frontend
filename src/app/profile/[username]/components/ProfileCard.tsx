@@ -5,11 +5,12 @@ import SkeletonProfileCard from "../../../components/SkeletonProfileCard";
 import * as Dialog from '@radix-ui/react-dialog';
 import useAuthToken from "../../../hooks/useAuthToken";
 import { useToast } from "../../../hooks/useToast";
+import Image from 'next/image';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 function getImageSrc(profileImage: string | null | undefined) {
-  if (!profileImage) return null;
+  if (!profileImage) return '/placeholder-avatar.png';
   if (profileImage.startsWith("http")) return profileImage;
   return `${BASE_URL}${profileImage}`;
 }
@@ -29,8 +30,6 @@ export default function ProfileCard() {
   const [editData, setEditData] = useState({ username: "", email: "", bio: "", profileImage: null as File | null });
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const token = useAuthToken();
@@ -40,7 +39,6 @@ export default function ProfileCard() {
   useEffect(() => {
     async function fetchProfile() {
       setLoading(true);
-      setError("");
       try {
         const res = await fetch(`${BASE_URL}/api/profile`, {
           credentials: 'include',
@@ -59,8 +57,7 @@ export default function ProfileCard() {
           profileImage: null 
         });
         setPreviewImage(getImageSrc(data.profileImage));
-      } catch (err) {
-        setError("Could not load profile");
+      } catch {
       } finally {
         setLoading(false);
       }
@@ -105,7 +102,7 @@ export default function ProfileCard() {
       setProfile(data);
       setEditOpen(false);
       showToast("Profile updated successfully!", "success");
-    } catch (err) {
+    } catch {
       showToast("Could not update profile", "error");
     } finally {
       setSaving(false);
@@ -119,9 +116,11 @@ export default function ProfileCard() {
       <div className="flex flex-col items-center">
         <div className="relative mb-3">
           {previewImage ? (
-            <img
+            <Image
               src={previewImage}
               alt="Profile"
+              width={64}
+              height={64}
               className="w-16 h-16 rounded-full object-cover border-3 border-indigo-200 shadow"
             />
           ) : (
@@ -157,9 +156,11 @@ export default function ProfileCard() {
             <form className="flex flex-col gap-4" onSubmit={handleEditSubmit}>
               <div className="flex flex-col items-center gap-2">
                 {previewImage ? (
-                  <img
+                  <Image
                     src={previewImage}
                     alt="Profile"
+                    width={80}
+                    height={80}
                     className="w-20 h-20 rounded-full object-cover border-2 border-indigo-200 shadow"
                   />
                 ) : (

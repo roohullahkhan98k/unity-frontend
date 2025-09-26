@@ -7,6 +7,7 @@ import { updatePostCurrentPrice } from '../../store/postsSlice';
 import { useToast } from '../hooks/useToast';
 import useAuthToken from '../hooks/useAuthToken';
 import type { RootState, AppDispatch } from '../../store/store';
+import Image from 'next/image';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -99,8 +100,8 @@ export default function BiddingSection({ post, currentUserId }: BiddingSectionPr
       // Refresh bids and winning bid
       dispatch(getBidsForPost(post._id));
       dispatch(getWinningBid(post._id));
-    } catch (error: any) {
-      showToast(error.message || "Failed to place bid", "error");
+    } catch (error: unknown) {
+      showToast(error instanceof Error ? error.message : "Failed to place bid", "error");
     }
   };
 
@@ -133,7 +134,7 @@ export default function BiddingSection({ post, currentUserId }: BiddingSectionPr
   };
 
   const getImageSrc = (profileImage: string | null | undefined) => {
-    if (!profileImage) return undefined;
+    if (!profileImage) return '/placeholder-avatar.png';
     if (profileImage.startsWith("http")) return profileImage;
     return `${BASE_URL}${profileImage}`;
   };
@@ -269,7 +270,7 @@ export default function BiddingSection({ post, currentUserId }: BiddingSectionPr
             <h3 className="font-semibold text-gray-800">Bidding History</h3>
           </div>
           <div className="max-h-64 overflow-y-auto">
-            {bids.map((bid, index) => (
+            {bids.map((bid) => (
               <div
                 key={bid._id}
                 className={`flex items-center justify-between p-4 border-b border-gray-100 last:border-b-0 ${
@@ -279,16 +280,12 @@ export default function BiddingSection({ post, currentUserId }: BiddingSectionPr
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
                     {bid.bidder?.profileImage ? (
-                      <img
+                      <Image
                         src={getImageSrc(bid.bidder.profileImage)}
                         alt={bid.bidder.username || 'User'}
+                        width={32}
+                        height={32}
                         className="w-full h-full object-cover"
-                        onError={(e) => {
-                          // Fallback to placeholder if image fails to load
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          target.nextElementSibling?.classList.remove('hidden');
-                        }}
                       />
                     ) : null}
                     <div className={`w-full h-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center ${bid.bidder?.profileImage ? 'hidden' : ''}`}>
