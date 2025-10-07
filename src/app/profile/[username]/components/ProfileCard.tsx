@@ -6,14 +6,10 @@ import * as Dialog from '@radix-ui/react-dialog';
 import useAuthToken from "../../../hooks/useAuthToken";
 import { useToast } from "../../../hooks/useToast";
 import Image from 'next/image';
+import Avatar from '../../../components/Avatar';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-function getImageSrc(profileImage: string | null | undefined) {
-  if (!profileImage) return '/placeholder-avatar.png';
-  if (profileImage.startsWith("http")) return profileImage;
-  return `${BASE_URL}${profileImage}`;
-}
 
 type Profile = {
   userId: string;
@@ -56,7 +52,7 @@ export default function ProfileCard() {
           bio: data.bio || "", 
           profileImage: null 
         });
-        setPreviewImage(getImageSrc(data.profileImage));
+        setPreviewImage(data.profileImage ? (data.profileImage.startsWith("http") ? data.profileImage : `${BASE_URL}${data.profileImage}`) : null);
       } catch {
       } finally {
         setLoading(false);
@@ -124,7 +120,13 @@ export default function ProfileCard() {
               className="w-16 h-16 rounded-full object-cover border-3 border-indigo-200 shadow"
             />
           ) : (
-            <UserCircle className="w-16 h-16 text-indigo-400" />
+            <Avatar
+              src={profile?.profileImage}
+              alt="Profile"
+              username={profile?.username}
+              size="xl"
+              className="border-3 border-indigo-200 shadow"
+            />
           )}
           <button
             className="absolute bottom-0 right-0 bg-indigo-500 text-white rounded-full p-1 shadow hover:bg-indigo-600"

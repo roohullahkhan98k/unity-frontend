@@ -7,7 +7,7 @@ import { updatePostCurrentPrice } from '../../store/postsSlice';
 import { useToast } from '../hooks/useToast';
 import useAuthToken from '../hooks/useAuthToken';
 import type { RootState, AppDispatch } from '../../store/store';
-import Image from 'next/image';
+import Avatar from './Avatar';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -133,11 +133,6 @@ export default function BiddingSection({ post, currentUserId }: BiddingSectionPr
     });
   };
 
-  const getImageSrc = (profileImage: string | null | undefined) => {
-    if (!profileImage) return '/placeholder-avatar.png';
-    if (profileImage.startsWith("http")) return profileImage;
-    return `${BASE_URL}${profileImage}`;
-  };
 
   const isLive = post.status === 'live' && new Date(post.auctionEndTime) > new Date();
 
@@ -279,20 +274,12 @@ export default function BiddingSection({ post, currentUserId }: BiddingSectionPr
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
-                    {bid.bidder?.profileImage ? (
-                      <Image
-                        src={getImageSrc(bid.bidder.profileImage)}
-                        alt={bid.bidder.username || 'User'}
-                        width={32}
-                        height={32}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : null}
-                    <div className={`w-full h-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center ${bid.bidder?.profileImage ? 'hidden' : ''}`}>
-                      <span className="text-white font-bold text-xs">
-                        {bid.bidder?.username?.charAt(0).toUpperCase() || 'U'}
-                      </span>
-                    </div>
+                    <Avatar
+                      src={bid.bidder?.profileImage}
+                      alt={bid.bidder?.username || 'User'}
+                      username={bid.bidder?.username}
+                      size="sm"
+                    />
                   </div>
                   <div>
                     <div className="font-medium text-gray-800">

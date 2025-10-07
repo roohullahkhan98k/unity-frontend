@@ -9,6 +9,7 @@ import { useCurrentUser } from '../hooks/useCurrentUser';
 import ChatConnectionStatus from './ChatConnectionStatus';
 import type { RootState } from '../../store/store';
 import Image from 'next/image';
+import Avatar from './Avatar';
 
 interface AuctionChatProps {
   postId: string;
@@ -205,19 +206,12 @@ export default function AuctionChat({ postId }: AuctionChatProps) {
                       <>
                         {!isCurrentUser && (
                           <div className="flex-shrink-0">
-                            {msg.profileImage ? (
-                              <Image
-                                src={msg.profileImage.startsWith('http') ? msg.profileImage : `${process.env.NEXT_PUBLIC_API_URL}${msg.profileImage}`}
-                                alt={msg.username || 'User avatar'}
-                                width={32}
-                                height={32}
-                                className="w-8 h-8 rounded-full"
-                              />
-                            ) : (
-                              <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                                {msg.username ? msg.username.charAt(0).toUpperCase() : '?'}
-                              </div>
-                            )}
+                            <Avatar
+                              src={msg.profileImage}
+                              alt={msg.username || 'User avatar'}
+                              username={msg.username}
+                              size="sm"
+                            />
                           </div>
                         )}
                         <div className={`flex-1 max-w-[70%] ${isCurrentUser ? 'order-first' : ''}`}>
@@ -345,19 +339,13 @@ export default function AuctionChat({ postId }: AuctionChatProps) {
                   const isCurrentUser = participant.userId === currentUserId;
                   return (
                     <div key={participant.userId} className={`flex items-center gap-2 ${isCurrentUser && isTyping ? 'bg-blue-50 rounded-lg p-2' : ''}`}>
-                    {participant.profileImage ? (
-                      <Image
-                        src={participant.profileImage.startsWith('http') ? participant.profileImage : `${process.env.NEXT_PUBLIC_API_URL}${participant.profileImage}`}
-                        alt={participant.username || 'User avatar'}
-                        width={24}
-                        height={24}
-                        className="w-6 h-6 rounded-full"
-                      />
-                    ) : (
-                      <div className="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
-                        {participant.username ? participant.username.charAt(0).toUpperCase() : '?'}
-                      </div>
-                    )}
+                    <Avatar
+                      src={participant.profileImage}
+                      alt={participant.username || 'User avatar'}
+                      username={participant.username}
+                      size="sm"
+                      className="w-6 h-6"
+                    />
                     <span className="text-sm text-gray-700">{participant.username || 'Unknown User'}</span>
                     {participant.isTyping && participant.userId !== currentUserId && (
                       <span className="text-xs text-gray-500 italic">typing...</span>

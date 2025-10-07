@@ -11,6 +11,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { fetchUserPosts, updatePost, deletePost, cancelPost, reactivatePost } from '../../../../store/postsSlice';
 import type { RootState, AppDispatch } from '../../../../store/store';
 import Image from 'next/image';
+import Avatar from '../../../components/Avatar';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -329,17 +330,15 @@ export default function PostsSection() {
                 <div className="flex items-center p-4">
                   {/* Avatar and Media */}
                   <div className="flex items-center space-x-4 flex-shrink-0">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg ${
-                      isCancelled(post) 
-                        ? 'bg-gray-400' 
-                        : 'bg-gradient-to-br from-indigo-400 to-purple-500'
-                    }`}>
-                      <span className={`font-bold text-sm ${
-                        isCancelled(post) ? 'text-gray-600' : 'text-white'
-                      }`}>
-                        {post.user?.username?.charAt(0).toUpperCase() || 'U'}
-                      </span>
-                    </div>
+                    <Avatar
+                      src={post.user?.profileImage}
+                      alt={post.user?.username || 'User'}
+                      username={post.user?.username}
+                      size="lg"
+                      className={`shadow-lg ${
+                        isCancelled(post) ? 'grayscale opacity-50' : ''
+                      }`}
+                    />
                     <div className={`w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 ${
                       isCancelled(post) ? 'bg-gray-300' : 'bg-gray-200'
                     }`}>

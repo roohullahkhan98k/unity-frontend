@@ -6,15 +6,10 @@ import { useNotificationSync } from '../hooks/useNotificationSync';
 import type { RootState, AppDispatch } from '../../store/store';
 import SkeletonNotification from './SkeletonNotification';
 import useAuthToken from '../hooks/useAuthToken';
-import Image from 'next/image';
+import Avatar from './Avatar';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-function getImageSrc(src:string|null|undefined){
-  if (!src) return '/placeholder-avatar.png';
-  if (src.startsWith("http")) return src;
-  return `${BASE_URL}${src}`;
-}
 
 export default function NotificationDropdown() {
   const dispatch = useDispatch<AppDispatch>();
@@ -68,13 +63,18 @@ export default function NotificationDropdown() {
       ) : (
         <>
           <div className="max-h-[400px] overflow-y-auto">
-            {items.slice(0, 5).map((n: { _id: string; read: boolean; message: string; user?: { profileImage?: string }; postTitle?: string; createdAt: string }) => (
+            {items.slice(0, 5).map((n: { _id: string; read: boolean; message: string; user?: { profileImage?: string; username?: string }; postTitle?: string; createdAt: string }) => (
               <button
                 key={n._id}
                 onClick={() => handleMarkAsRead(n._id)}
                 className={`flex gap-3 w-full text-left px-4 py-2 hover:bg-gray-50 ${!n.read ? 'bg-indigo-50' : ''}`}
               >
-                <Image src={getImageSrc(n.user?.profileImage)} alt="Profile" width={36} height={36} className="h-9 w-9 rounded-full object-cover" />
+                <Avatar
+                  src={n.user?.profileImage}
+                  alt="Profile"
+                  username={n.user?.username}
+                  size="md"
+                />
                 <div className="flex-1">
                   <p className="text-sm text-gray-800">{n.message}</p>
                   {n.postTitle && <p className="text-xs text-gray-500 mt-0.5">Post: {n.postTitle}</p>}

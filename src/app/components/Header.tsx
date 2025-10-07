@@ -1,6 +1,6 @@
 "use client";
 import { usePathname } from 'next/navigation';
-import { UserCircle, Bell } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import NotificationDropdown from './NotificationDropdown';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../store/store';
@@ -10,6 +10,7 @@ import useAuthToken from "../hooks/useAuthToken";
 import { useNotificationSync } from "../hooks/useNotificationSync";
 import WalletConnectionStatus from './WalletConnectionStatus';
 import Image from 'next/image';
+import Avatar from './Avatar';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -21,11 +22,6 @@ type Profile = {
   profileImage?: string | null;
 };
 
-function getImageSrc(profileImage: string | null | undefined) {
-  if (!profileImage) return '/placeholder-avatar.png';
-  if (profileImage.startsWith("http")) return profileImage;
-  return `${BASE_URL}${profileImage}`;
-}
 
 export default function Header() {
   const pathname = usePathname();
@@ -129,16 +125,14 @@ export default function Header() {
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
               </svg>
             </span>
-          ) : profile && profile.profileImage ? (
-            <Image
-              src={getImageSrc(profile.profileImage)}
-              alt="Profile"
-              width={44}
-              height={44}
-              className="h-11 w-11 rounded-full object-cover border-2 border-gray-200 shadow-sm"
-            />
           ) : (
-            <UserCircle className="h-11 w-11 text-gray-600" />
+            <Avatar
+              src={profile?.profileImage}
+              alt="Profile"
+              username={profile?.username}
+              size="lg"
+              className="border-2 border-gray-200 shadow-sm"
+            />
           )}
           <span className="font-semibold text-lg text-gray-700">{loading ? "..." : profile?.username || "User"}</span>
         </div>

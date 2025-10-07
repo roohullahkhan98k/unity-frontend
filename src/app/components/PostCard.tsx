@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux';
 import { useCountdown } from '../hooks/useCountdown';
 import type { RootState } from '../../store/store';
 import Image from 'next/image';
+import Avatar from './Avatar';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -208,11 +209,13 @@ export default function PostCard({ post, showActions = true }: PostCardProps) {
       <div className="p-4">
         {/* Header */}
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center shadow-lg">
-            <span className="text-white font-bold text-sm">
-              {post.user?.username?.charAt(0).toUpperCase() || 'U'}
-            </span>
-          </div>
+          <Avatar
+            src={post.user?.profileImage}
+            alt={post.user?.username || 'User'}
+            username={post.user?.username}
+            size="md"
+            className="shadow-lg"
+          />
           <div>
             <h3 className="font-bold text-gray-900 text-lg line-clamp-1">{post.title}</h3>
             <p className="text-sm text-gray-500">{post.user?.username || 'Unknown User'}</p>
