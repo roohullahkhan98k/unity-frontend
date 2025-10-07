@@ -16,7 +16,7 @@ import {
 import type { RootState, AppDispatch } from '../../store/store';
 import useAuthToken from './useAuthToken';
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:8012';
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL;
 
 export const useSocket = () => {
   const socketRef = useRef<Socket | null>(null);
